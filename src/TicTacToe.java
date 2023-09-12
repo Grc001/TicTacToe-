@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -6,29 +9,46 @@ import java.util.Scanner;
 
 public class TicTacToe {
 
-    private final int N;
-    private final char[][] board;
+    private int N;
+    private char[][] board;
     private final char[] players = {'X', 'O'};
     private int currentPlayerIndex = 0;
 
     private int[][] winningLine = null;
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Entrez le nombre de dimensions du tableau N (>= 3):");
-        int N = scanner.nextInt();
-        while (N < 3) {
-            System.out.println("invalide, veuillez choisir un autre nombre (>= 3):");
-            N = scanner.nextInt();
+        TicTacToe game = new TicTacToe();
+        if (!game.loadGame()) {
+            System.out.println("Entrez le nombre de dimensions du tableau N (>= 3):");
+            int N = scanner.nextInt();
+            while (N < 3) {
+                System.out.println("invalide, veuillez choisir un autre nombre (>= 3):");
+                N = scanner.nextInt();
+            }
+            game.initializeBoard(N);
         }
-        TicTacToe game = new TicTacToe(N);
         game.play();
     }
-    public TicTacToe(int N) {
-        this.N = N;
+
+    public void initializeBoard(int dimension) {
+        this.N = dimension;
         this.board = new char[N][N];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 board[i][j] = ' ';
+            }
+        }
+    }
+
+    public TicTacToe() {
+        // Si une sauvegarde existe, elle sera chargée dans le constructeur.
+        if (!loadGame()) {
+            N = 3; // Valeur par défaut
+            board = new char[N][N];
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    board[i][j] = ' ';
+                }
             }
         }
     }
@@ -43,7 +63,7 @@ public class TicTacToe {
             printBoard();
             int move = -1;
             while (true) {
-                System.out.println("Joueur " + players[currentPlayerIndex] + ", faites votre choix (1-" + (N * N) + ") ou tapez '/save' pour sauvegarder:");
+                System.out.println("Joueur " + players[currentPlayerIndex] + ", faites votre choix (1-" + (N * N) + ") ou tapez '/save' pour sauvegarder et quitter la partie:");
                 String input = scanner.nextLine();
                 if ("/save".equals(input)) {
                     saveGame();
@@ -89,12 +109,14 @@ public class TicTacToe {
             if (hasWon(row, col)) {
                 printBoard();
                 System.out.println("Le joueur " + players[currentPlayerIndex] + " gagne la partie, BRAVO!");
+                deleteSaveFile();  // Supprimez le fichier de sauvegarde ici
                 return;
             }
             currentPlayerIndex = 1 - currentPlayerIndex;
         }
         printBoard();
         System.out.println("Match nul!");
+        deleteSaveFile();
     }
 
 
@@ -207,6 +229,7 @@ public class TicTacToe {
     private void saveGame() {
         try {
             StringBuilder sb = new StringBuilder();
+            sb.append(N).append("\n"); // Sauvegardez la valeur de N en premier
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
                     sb.append(board[i][j]);
@@ -219,18 +242,28 @@ public class TicTacToe {
             e.printStackTrace();
         }
     }
-    private boolean loadGame() {
+
+    public boolean loadGame() {
         try {
             List<String> lines = Files.readAllLines(Paths.get("game_save.txt"));
+            N = Integer.parseInt(lines.get(0)); // Lisez la valeur de N en premier
+            board = new char[N][N]; // Initialisez le tableau avec la valeur de N
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    board[i][j] = lines.get(i).charAt(j);
+                    board[i][j] = lines.get(i + 1).charAt(j); // +1 car la première ligne est N
                 }
             }
-            currentPlayerIndex = Integer.parseInt(lines.get(N));
+            currentPlayerIndex = Integer.parseInt(lines.get(N + 1)); // +1 car la première ligne est N
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+    private void deleteSaveFile() {
+        try {
+            Files.deleteIfExists(Paths.get("game_save.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
