@@ -14,6 +14,8 @@ public class TicTacToe {
     private final char[] players = {'X', 'O'};
     private int currentPlayerIndex = 0;
 
+    private int moves = 0;
+
     private int[][] winningLine = null;
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -57,8 +59,9 @@ public class TicTacToe {
         Scanner scanner = new Scanner(System.in);
         if (loadGame()) {
             System.out.println("Game loaded!");
+            moves = moves;
         }
-        int moves = 0;
+
         while (moves < N * N) {
             printBoard();
             int move = -1;
@@ -115,7 +118,7 @@ public class TicTacToe {
             currentPlayerIndex = 1 - currentPlayerIndex;
         }
         printBoard();
-        System.out.println("Match nul!");
+        System.out.println("Match nuuuuUUUuuuul!");
         deleteSaveFile();
     }
 
@@ -237,11 +240,24 @@ public class TicTacToe {
                 sb.append("\n");
             }
             sb.append(currentPlayerIndex).append("\n");
+            sb.append(moves).append("\n");
             Files.write(Paths.get("game_save.txt"), sb.toString().getBytes());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+//    private int countMoves() {
+//        int count = 0;
+//        for (int i = 0; i < N; i++) {
+//            for (int j = 0; j < N; j++) {
+//                if (board[i][j] != ' ') {
+//                    count++;
+//                }
+//            }
+//        }
+//        return count;
+//    }
+
 
     public boolean loadGame() {
         try {
@@ -254,6 +270,7 @@ public class TicTacToe {
                 }
             }
             currentPlayerIndex = Integer.parseInt(lines.get(N + 1)); // +1 car la première ligne est N
+            moves = Integer.parseInt(lines.get(N+2));
             return true;
         } catch (Exception e) {
             return false;
